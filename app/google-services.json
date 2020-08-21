@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "781480158645",
+    "firebase_url": "https://bogy-s-travels.firebaseio.com",
+    "project_id": "bogy-s-travels",
+    "storage_bucket": "bogy-s-travels.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:781480158645:android:8e131ae3f1a58d65e8a5fc",
+        "android_client_info": {
+          "package_name": "com.example.bogystravels"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "781480158645-0tc9ekdjmng4ke9lkdadqulhjb9bfq17.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBB73djDBycIxpkxX8jQJqdYy6ExvFUjuM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "781480158645-0tc9ekdjmng4ke9lkdadqulhjb9bfq17.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
