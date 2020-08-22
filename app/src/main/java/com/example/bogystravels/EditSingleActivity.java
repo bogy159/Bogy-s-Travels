@@ -33,7 +33,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -41,6 +40,7 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
 
     private static final String TAG = "EditSingleActivity";
     private static String docKey;
+    private static String APIKEY;
 
     @SuppressLint("SimpleDateFormat")
     SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
@@ -65,6 +65,7 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             docKey = extras.getString("key");
+            APIKEY = extras.getString("apiKey");
         }
 
         editTextTextPersonName = findViewById(R.id.editTextTextPersonName);
@@ -172,7 +173,7 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
                 AddSingleActivity addSingleActivity = new AddSingleActivity();
                 //this will call your method every time the user stops typing, if you want to call it for each letter, call it in onTextChanged
                 try {
-                    suggestions = addSingleActivity.apiCall(s.toString());
+                    suggestions = addSingleActivity.apiCall(APIKEY, s.toString());
                     if (!suggestions.isEmpty()){
                         adapter.clear();
                         adapter.addAll(suggestions);

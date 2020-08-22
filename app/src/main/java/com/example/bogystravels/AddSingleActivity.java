@@ -25,10 +25,14 @@ import android.widget.Filterable;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.jakewharton.rxbinding.widget.RxTextView;
 import com.squareup.okhttp.OkHttpClient;
@@ -55,6 +59,7 @@ import java.util.concurrent.TimeUnit;
 public class AddSingleActivity extends AppCompatActivity implements View.OnClickListener{
 
     private static final String TAG = "AddSingleActivity";
+    private static String APIKEY;
 
     TextView editTextTextPersonName;
     TextView editTextTextPostalAddress;
@@ -75,6 +80,12 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_single);
+
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            APIKEY = extras.getString("apiKey");
+        }
+        System.out.println("Klucha mi e: " + APIKEY);
 
         editTextTextPersonName = findViewById(R.id.editTextTextPersonName);
         editTextTextPostalAddress = findViewById(R.id.editTextTextPostalAddress);
@@ -178,7 +189,7 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
 
                 //this will call your method every time the user stops typing, if you want to call it for each letter, call it in onTextChanged
                 try {
-                    suggestions = apiCall(s.toString());
+                    suggestions = apiCall(APIKEY, s.toString());
                     if (!suggestions.isEmpty()){
                         adapter.clear();
                         adapter.addAll(suggestions);
@@ -197,7 +208,7 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
         });
     }
 
-    public List<String> apiCall(final String prefix) throws IOException, InterruptedException {
+    public List<String> apiCall(final String apiKey, final String prefix) throws IOException, InterruptedException {
         final List<String> citiesList = new ArrayList<String>();
         Thread newThread = new Thread(new Runnable() {
             @Override
@@ -205,11 +216,13 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
                 try {
                     OkHttpClient client = new OkHttpClient();
 
+                    System.out.println("Klucha mi e: " + apiKey);
+
                     Request request = new Request.Builder()
                             .url("https://wft-geo-db.p.rapidapi.com/v1/geo/cities?limit=5&namePrefix="+ prefix +"&sort=-population&types=CITY")
                             .get()
                             .addHeader("x-rapidapi-host", "wft-geo-db.p.rapidapi.com")
-                            .addHeader("x-rapidapi-key", "0a878b5c55mshd7f784f3d44fe40p197236jsn4f3a3631e8fc")
+                            .addHeader("x-rapidapi-key", apiKey)
                             .build();
 
                     Response response = client.newCall(request).execute();
@@ -224,8 +237,8 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
                         }
 
                     } catch (Throwable t) {
-                        Log.e("My App", "Could not parse malformed JSON: \"" + jsonData + "\"");
-                        Log.e("My App", "Error: \"" + t + "\"");
+                        Log.e(TAG, "Could not parse malformed JSON: \"" + jsonData + "\"");
+                        Log.e(TAG, "Error: \"" + t + "\"");
                     }
                 }
                 catch (Exception e) {
@@ -247,8 +260,7 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
                 finish();
                 break;
             case R.id.buttonOK:
-                //Pair<List<String>, ArrayList<Date>> results = safeAdd(editTextTextPersonName.getText().toString(), editTextTextPostalAddress.getText().toString(), mDisplayDate.getText().toString(), mDisplayDate2.getText().toString());
-                //Pair<List<String>, ArrayList<Date>> results
+
                 List<Object> results = safeAdd(this, editTextTextPersonName.getText().toString(), editTextTextPostalAddress.getText().toString(), mDisplayDate.getText().toString(), mDisplayDate2.getText().toString());
                 if (results!=null){
                     addData(results.get(0).toString(), results.get(1).toString(), results.get(2), results.get(3));
@@ -290,7 +302,6 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
                 });
     }
 
-    //public Pair<List<String>, List<Date>> safeAdd(String name, String loc, String arrive, String depart){
     public List<Object> safeAdd(Context context, String name, String loc, String arrive, String depart){
         Date dateA = null;
         Date dateD = null;
@@ -345,4 +356,5 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
         }
 
     }
+
 }

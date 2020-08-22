@@ -3,12 +3,14 @@ package com.example.bogystravels;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -20,19 +22,23 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, MyRecyclerViewAdapter.ItemClickListener{
 
     private static final String TAG = "MainActivity";
     private static final String ARG_NAME = "username";
+    private static String APIKEY = "";
 
     MyRecyclerViewAdapter adapter;
 
@@ -60,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         googleSignInClient = GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN);
         firebaseAuth = FirebaseAuth.getInstance();
-
+        getApiKey();
         //getAllData();
     }
 
@@ -126,13 +132,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void launchAddSingleActivity() {
-        //startActivity(LoginActivity.class, "asd"));
-        startActivity(new Intent(this, AddSingleActivity.class));
+        //startActivity(new Intent(this, AddSingleActivity.class));
+        Intent i = new Intent(this, AddSingleActivity.class);
+        i.putExtra("apiKey",APIKEY);
+        startActivity(i);
     }
 
     private void launchEditSingleActivity(String value) {
         Intent i = new Intent(this, EditSingleActivity.class);
         i.putExtra("key",value);
+        i.putExtra("apiKey",APIKEY);
         startActivity(i);
     }
 
@@ -174,8 +183,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void onItemClick(View view, int position) {
-        //Toast.makeText(this, "You clicked " + adapter.getItem(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
         launchEditSingleActivity(adapter.getItem(position));
+    }
+
+    public void getApiKey(){
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("keys").document("6bzPDauGsDMMQfex3YTu").get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    assert document != null;
+                    if (document.exists()) {
+                        if (document.contains("apiKeys")){
+                            APIKEY = Objects.requireNonNull(document.get("apiKeys")).toString();
+                        }
+                    } else {
+                        Log.d(TAG, "No such document");
+                    }
+                } else {
+                    Log.d(TAG, "Get failed with ", task.getException());
+                }
+            }
+        });
     }
 
     public String timestampToString(Timestamp timestamp){
