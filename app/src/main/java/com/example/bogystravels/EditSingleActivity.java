@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -157,6 +158,8 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
 
         editText.addTextChangedListener(new TextWatcher() {
 
+            private Handler mHandler = new Handler();
+
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -169,27 +172,35 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
 
             @Override
             public void afterTextChanged(final Editable s) {
+                mHandler.removeCallbacks(mFilterTask);
+                mHandler.postDelayed(mFilterTask, 1000);
+            }
+        });
+    }
 
-                AddSingleActivity addSingleActivity = new AddSingleActivity();
-                //this will call your method every time the user stops typing, if you want to call it for each letter, call it in onTextChanged
-                try {
-                    suggestions = addSingleActivity.apiCall(APIKEY, s.toString());
-                    if (!suggestions.isEmpty()){
-                        adapter.clear();
-                        adapter.addAll(suggestions);
-                        adapter.notifyDataSetChanged();
-                    }
+    Runnable mFilterTask = new Runnable() {
+        @Override
+        public void run() {
+            CharSequence s = editTextTextPostalAddress.getText();
+            AddSingleActivity addSingleActivity = new AddSingleActivity();
+            try {
+                suggestions = addSingleActivity.apiCall(APIKEY, s.toString());
+                System.out.println("Quarry for string: " + s);
 
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
+                if (!suggestions.isEmpty()){
+                    adapter.clear();
+                    adapter.addAll(suggestions);
+                    adapter.notifyDataSetChanged();
                 }
 
-                //Force the adapter to filter itself, necessary to show new data.
-                //Filter based on the current text because api call is asynchronous.
-                adapter.getFilter().filter(s);
-
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
             }
-        }); }
+            //Force the adapter to filter itself, necessary to show new data.
+            //Filter based on the current text because api call is asynchronous.
+            adapter.getFilter().filter(s);
+        }
+    };
 
     @Override
     public void onClick(View view) {
@@ -343,5 +354,4 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
                 });
     }
 
-    //private boolean
 }

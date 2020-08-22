@@ -54,6 +54,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 public class AddSingleActivity extends AppCompatActivity implements View.OnClickListener{
@@ -174,6 +176,8 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
 
         editText.addTextChangedListener(new TextWatcher() {
 
+            private Handler mHandler = new Handler();
+
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -185,28 +189,38 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
             }
 
             @Override
-            public void afterTextChanged(final Editable s) {
-
-                //this will call your method every time the user stops typing, if you want to call it for each letter, call it in onTextChanged
-                try {
-                    suggestions = apiCall(APIKEY, s.toString());
-                    if (!suggestions.isEmpty()){
-                        adapter.clear();
-                        adapter.addAll(suggestions);
-                        adapter.notifyDataSetChanged();
-                    }
-
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                //Force the adapter to filter itself, necessary to show new data.
-                //Filter based on the current text because api call is asynchronous.
-                adapter.getFilter().filter(s);
-
+            public void afterTextChanged(Editable s) {
+                mHandler.removeCallbacks(mFilterTask);
+                mHandler.postDelayed(mFilterTask, 1000);
             }
+
+
+
         });
     }
+
+    Runnable mFilterTask = new Runnable() {
+        @Override
+        public void run() {
+            CharSequence s = editTextTextPostalAddress.getText();
+            try {
+                suggestions = apiCall(APIKEY, s.toString());
+                System.out.println("Quarry for string: " + s);
+
+                if (!suggestions.isEmpty()){
+                    adapter.clear();
+                    adapter.addAll(suggestions);
+                    adapter.notifyDataSetChanged();
+                }
+
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+            //Force the adapter to filter itself, necessary to show new data.
+            //Filter based on the current text because api call is asynchronous.
+            adapter.getFilter().filter(s);
+        }
+    };
 
     public List<String> apiCall(final String apiKey, final String prefix) throws IOException, InterruptedException {
         final List<String> citiesList = new ArrayList<String>();
@@ -215,8 +229,6 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
             public void run() {
                 try {
                     OkHttpClient client = new OkHttpClient();
-
-                    System.out.println("Klucha mi e: " + apiKey);
 
                     Request request = new Request.Builder()
                             .url("https://wft-geo-db.p.rapidapi.com/v1/geo/cities?limit=5&namePrefix="+ prefix +"&sort=-population&types=CITY")
@@ -233,7 +245,7 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
                         JSONArray arr = obj.getJSONArray("data");
 
                         for (int i = 0; i < arr.length(); i++) {
-                            citiesList.add(arr.getJSONObject(i).get("name").toString());
+                            citiesList.add(arr.getJSONObject(i).get("name").toString() + ", " + arr.getJSONObject(i).get("country").toString());
                         }
 
                     } catch (Throwable t) {
