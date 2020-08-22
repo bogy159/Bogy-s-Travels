@@ -41,19 +41,20 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         try {
             for (Map m : data) {
                 if (m.containsKey("location")){
-                    if (m.containsKey("date")){
-                        //Timestamp timestamp = (Timestamp) m.get("date");
-                        //timestampToString((Timestamp) m.get("date"));
-                        //SimpleDateFormat DateFor = new SimpleDateFormat("dd/MM/yyyy");
-                        //String stringDate= DateFor.format(timestamp.toDate());
-                        MainActivity mainActivity = new MainActivity();
-                        result.add(m.get("location").toString() + " - " + mainActivity.timestampToString((Timestamp) m.get("date")));
-                        result2.add(m.get("id"));
+                    if (m.containsKey("dateA")){
+                        if (m.containsKey("dateD")){
+                            MainActivity mainActivity = new MainActivity();
+                            result.add(m.get("location").toString() + ": " + mainActivity.timestampToString((Timestamp) m.get("dateA")) + " - " + mainActivity.timestampToString((Timestamp) m.get("dateD")));
+                        }
+                        else{
+                            MainActivity mainActivity = new MainActivity();
+                            result.add(m.get("location").toString() + ": " + mainActivity.timestampToString((Timestamp) m.get("dateA")));
+                        }
                     }
                     else {
                         result.add(m.get("location").toString());
-                        result2.add(m.get("id"));
                     }
+                    result2.add(m.get("id"));
                 }
             }
         }

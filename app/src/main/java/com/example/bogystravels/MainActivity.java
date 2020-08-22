@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         googleSignInClient = GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN);
         firebaseAuth = FirebaseAuth.getInstance();
 
-        getAllData();
+        //getAllData();
     }
 
     @Override
@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         String firebaseID = firebaseAuth.getUid();
 
-        db.collection("users").whereEqualTo("userId", firebaseID).orderBy("date", Query.Direction.DESCENDING).get()
+        db.collection("users").whereEqualTo("userId", firebaseID).orderBy("dateA", Query.Direction.DESCENDING).get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
