@@ -17,6 +17,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.DatePicker;
@@ -49,7 +50,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +68,7 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
 
     TextView editTextTextPersonName;
     TextView editTextTextPostalAddress;
+    TextView editTextTextCountryName;
 
     private TextView mDisplayDate;
     private TextView mDisplayDate2;
@@ -91,6 +95,7 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
 
         editTextTextPersonName = findViewById(R.id.editTextTextPersonName);
         editTextTextPostalAddress = findViewById(R.id.editTextTextPostalAddress);
+        editTextTextCountryName = findViewById(R.id.editTextTextCountryName);
         mDisplayDate = findViewById(R.id.editTextDate);
         mDisplayDate2 = findViewById(R.id.editTextDate2);
 
@@ -113,6 +118,19 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
                         android.R.style.Theme_Holo_Light_Dialog_MinWidth,
                         mDateSetListener,
                         year,month,day);
+
+                dialog.getDatePicker().setMinDate(-62167348957886L);
+                dialog.getDatePicker().setMaxDate(253402207200000L);
+                dialog.getDatePicker().updateDate(year,month,day);
+
+                Calendar c = Calendar.getInstance();
+                try {
+                    c.setTime(Objects.requireNonNull(formatter.parse(mDisplayDate2.getText().toString())));
+                    dialog.getDatePicker().setMaxDate(c.getTimeInMillis());
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
                 dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 dialog.show();
             }
@@ -137,6 +155,19 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
                         android.R.style.Theme_Holo_Light_Dialog_MinWidth,
                         mDateSetListener2,
                         year,month,day);
+
+                dialog.getDatePicker().setMinDate(-62167348957886L);
+                dialog.getDatePicker().setMaxDate(253402207200000L);
+                dialog.getDatePicker().updateDate(year,month,day);
+
+                Calendar c = Calendar.getInstance();
+                try {
+                    c.setTime(Objects.requireNonNull(formatter.parse(mDisplayDate.getText().toString())));
+                    dialog.getDatePicker().setMinDate(c.getTimeInMillis());
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
                 dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 dialog.show();
             }
@@ -168,7 +199,7 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
         findViewById(R.id.buttonCancel).setOnClickListener(this);
 
 
-        AutoCompleteTextView editText = findViewById(R.id.editTextTextPostalAddress);
+        final AutoCompleteTextView editText = findViewById(R.id.editTextTextPostalAddress);
         adapter = new ArrayAdapter<String>(this,
                 R.layout.support_simple_spinner_dropdown_item, suggestions);
         adapter.setNotifyOnChange(true);
@@ -193,10 +224,22 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
                 mHandler.removeCallbacks(mFilterTask);
                 mHandler.postDelayed(mFilterTask, 1000);
             }
-
-
-
         });
+
+        editText.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View arg1, int pos,
+                                    long id) {
+
+                List parts = splitRight(adapter.getItem(pos),", ", 2);
+                editText.setText(parts.get(0).toString());
+                if (parts.get(1)!=null){
+                    editTextTextCountryName.setText(parts.get(1).toString());
+                }
+            }
+        });
+
     }
 
     Runnable mFilterTask = new Runnable() {
@@ -264,6 +307,48 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
         return citiesList;
     }
 
+    public String apiGetCountry(final String apiKey, final String prefix) throws InterruptedException {
+
+        final String[] result = {""};
+        Thread newThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    OkHttpClient client = new OkHttpClient();
+
+                    Request request = new Request.Builder()
+                            .url("https://wft-geo-db.p.rapidapi.com/v1/geo/cities?limit=1&namePrefix="+ prefix +"&sort=-population&types=CITY")
+                            .get()
+                            .addHeader("x-rapidapi-host", "wft-geo-db.p.rapidapi.com")
+                            .addHeader("x-rapidapi-key", apiKey)
+                            .build();
+
+                    Response response = client.newCall(request).execute();
+                    String jsonData = response.body().string();
+
+                    try {
+                        JSONObject obj = new JSONObject(jsonData);
+                        JSONArray arr = obj.getJSONArray("data");
+
+                        result[0] = arr.getJSONObject(0).get("country").toString();
+
+                    } catch (Throwable t) {
+                        Log.e(TAG, "Could not parse malformed JSON: \"" + jsonData + "\"");
+                        Log.e(TAG, "Error: \"" + t + "\"");
+                    }
+                }
+                catch (Exception e) {
+                    Log.e(TAG,"An error has occured: " + e);
+                }
+            }
+        });
+
+        newThread.start();
+        newThread.join();
+
+        return result[0];
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onClick(View view) {
@@ -273,33 +358,34 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
                 break;
             case R.id.buttonOK:
 
-                List<Object> results = safeAdd(this, editTextTextPersonName.getText().toString(), editTextTextPostalAddress.getText().toString(), mDisplayDate.getText().toString(), mDisplayDate2.getText().toString());
+                List<Object> results = safeAdd(this, editTextTextPersonName.getText().toString(), editTextTextPostalAddress.getText().toString(),editTextTextCountryName.getText().toString(), mDisplayDate.getText().toString(), mDisplayDate2.getText().toString());
                 if (results!=null){
-                    addData(results.get(0).toString(), results.get(1).toString(), results.get(2), results.get(3));
+                    addData(results.get(0).toString(), results.get(1).toString(), results.get(2).toString(), results.get(3), results.get(4));
                     finish();
                 };
                 break;
         }
     }
 
-    public void addData(String name, String loc, Object dateA, Object dataD){
+    public void addData(String name, String loc,String country, Object dateA, Object dataD){
 
         FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
 
         // Access a Cloud Firestore instance from your Activity
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        // Create a new user with a first and last name
-        Map<String, Object> user = new HashMap<>();
-        user.put("location", loc);
-        user.put("name", name);
-        user.put("dateA", dateA);
-        user.put("dateD", dataD);
-        user.put("userId", firebaseAuth.getUid());
+        // Create a new trip with fields
+        Map<String, Object> trip = new HashMap<>();
+        trip.put("location", loc);
+        trip.put("country", country);
+        trip.put("name", name);
+        trip.put("dateA", dateA);
+        trip.put("dateD", dataD);
+        trip.put("userId", firebaseAuth.getUid());
 
         // Add a new document with a generated ID
         db.collection("users")
-                .add(user)
+                .add(trip)
                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
@@ -314,59 +400,72 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
                 });
     }
 
-    public List<Object> safeAdd(Context context, String name, String loc, String arrive, String depart){
-        Date dateA = null;
-        Date dateD = null;
+    public List<Object> safeAdd(Context context, String name, String loc, String country, String arrive, String depart) {
+        Date dateA;
+        Date dateD;
         try {
-            if (loc.equals("")){
+            if (loc.equals("")) {
                 Toast.makeText(context, "City must be selected before saving!", Toast.LENGTH_SHORT).show();
                 return null;
             }
-            if (!arrive.equals("")){
+            if (!arrive.equals("")) {
                 dateA = formatter.parse(arrive);
-            }
-            else{
+            } else {
                 Toast.makeText(context, "Arrival date has to be set, before saving!", Toast.LENGTH_SHORT).show();
                 return null;
             }
-            if (!depart.equals("")){
+            if (!depart.equals("")) {
                 dateD = formatter.parse(depart);
-            }
-            else{
+            } else {
                 Toast.makeText(context, "Departure date has to be set, before saving!", Toast.LENGTH_SHORT).show();
                 return null;
             }
             assert dateD != null;
             assert dateA != null;
-            if (dateD.compareTo(dateA)<0){
+            if (dateD.compareTo(dateA) < 0) {
                 Toast.makeText(context, "Date of arrival must not be after date of departure!", Toast.LENGTH_SHORT).show();
                 return null;
+            }
+            if (country.equals("")) {
+                country = apiGetCountry(APIKEY, loc);
             }
 
             List<Object> results = new ArrayList<Object>();
 
-            /*
-            List<String> result  = new ArrayList<>();
-            List<Date> result2  = new ArrayList<>();
-            result.add(name);
-            result.add(loc);
-            result2.add(dateA);
-            result2.add(dateD);
-            */
             results.add(name);
             results.add(loc);
+            results.add(country);
             results.add(dateA);
             results.add(dateD);
 
-            //return new Pair<>(result, result2);
             return results;
 
-        } catch (ParseException e) {
+        } catch (InterruptedException | ParseException e) {
             Log.e(TAG, "Catch error: " + e);
             e.printStackTrace();
             return null;
         }
+    }
 
+    public List<String> splitRight(String string, String regex, int limit) {
+        List<String> result = new ArrayList<String>();
+        String[] temp = new String[0];
+        for(int i = 1; i < limit; i++) {
+            if(string.matches(".*"+regex+".*")) {
+                temp = string.split(modifyRegex(regex));
+                result.add(temp[1]);
+                string = temp[0];
+            }
+        }
+        if(temp.length>0) {
+            result.add(temp[0]);
+        }
+        Collections.reverse(result);
+        return result;
+    }
+
+    public String modifyRegex(String regex){
+        return regex + "(?!.*" + regex + ".*$)";
     }
 
 }

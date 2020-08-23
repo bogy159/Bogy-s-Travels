@@ -41,19 +41,20 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         try {
             for (Map m : data) {
                 if (m.containsKey("location")){
+                    String _result_ = m.get("location").toString();
+                    if (m.containsKey("country")){
+                        _result_ = _result_ + ", " + m.get("country").toString();
+                    }
                     if (m.containsKey("dateA")){
-                        if (m.containsKey("dateD")){
-                            MainActivity mainActivity = new MainActivity();
-                            result.add(m.get("location").toString() + ": " + mainActivity.timestampToString((Timestamp) m.get("dateA")) + " - " + mainActivity.timestampToString((Timestamp) m.get("dateD")));
-                        }
-                        else{
-                            MainActivity mainActivity = new MainActivity();
-                            result.add(m.get("location").toString() + ": " + mainActivity.timestampToString((Timestamp) m.get("dateA")));
-                        }
+                        MainActivity mainActivity = new MainActivity();
+                        _result_ = _result_ + ": " + mainActivity.timestampToString((Timestamp) m.get("dateA"));
                     }
-                    else {
-                        result.add(m.get("location").toString());
+                    if (m.containsKey("dateD")){
+                        MainActivity mainActivity = new MainActivity();
+                        _result_ = _result_ + " - " + mainActivity.timestampToString((Timestamp) m.get("dateD"));
+                        //result.add(_result_ + ": " + mainActivity.timestampToString((Timestamp) m.get("dateA")) + " - " + mainActivity.timestampToString((Timestamp) m.get("dateD")));
                     }
+                    result.add(_result_);
                     result2.add(m.get("id"));
                 }
             }

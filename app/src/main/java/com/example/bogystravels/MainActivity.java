@@ -67,7 +67,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         googleSignInClient = GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN);
         firebaseAuth = FirebaseAuth.getInstance();
         getApiKey();
-        //getAllData();
     }
 
     @Override
@@ -178,8 +177,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         adapter = new MyRecyclerViewAdapter(this, arrayMap);
         adapter.setClickListener((MyRecyclerViewAdapter.ItemClickListener) this);
         recyclerView.setAdapter(adapter);
-
-        Log.w(TAG, "Qk refresh batee!");
     }
 
     public void onItemClick(View view, int position) {

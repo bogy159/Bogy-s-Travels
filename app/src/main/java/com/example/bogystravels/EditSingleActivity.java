@@ -15,6 +15,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.DatePicker;
@@ -48,6 +49,7 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
 
     TextView editTextTextPersonName;
     TextView editTextTextPostalAddress;
+    TextView editTextTextCountryName;
 
     private TextView mDisplayDate;
     private TextView mDisplayDate2;
@@ -71,6 +73,7 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
 
         editTextTextPersonName = findViewById(R.id.editTextTextPersonName);
         editTextTextPostalAddress = findViewById(R.id.editTextTextPostalAddress);
+        editTextTextCountryName = findViewById(R.id.editTextTextCountryName2);
         mDisplayDate = findViewById(R.id.editTextDate);
         mDisplayDate2 = findViewById(R.id.editTextDate3);
 
@@ -93,6 +96,19 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
                         android.R.style.Theme_Holo_Light_Dialog_MinWidth,
                         mDateSetListener,
                         year,month,day);
+
+                dialog.getDatePicker().setMinDate(-62167348957886L);
+                dialog.getDatePicker().setMaxDate(253402207200000L);
+                dialog.getDatePicker().updateDate(year,month,day);
+
+                Calendar c = Calendar.getInstance();
+                try {
+                    c.setTime(Objects.requireNonNull(formatter.parse(mDisplayDate2.getText().toString())));
+                    dialog.getDatePicker().setMaxDate(c.getTimeInMillis());
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
                 dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 dialog.show();
             }
@@ -117,6 +133,19 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
                         android.R.style.Theme_Holo_Light_Dialog_MinWidth,
                         mDateSetListener2,
                         year,month,day);
+
+                dialog.getDatePicker().setMinDate(-62167348957886L);
+                dialog.getDatePicker().setMaxDate(253402207200000L);
+                dialog.getDatePicker().updateDate(year,month,day);
+
+                Calendar c = Calendar.getInstance();
+                try {
+                    c.setTime(Objects.requireNonNull(formatter.parse(mDisplayDate.getText().toString())));
+                    dialog.getDatePicker().setMinDate(c.getTimeInMillis());
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
                 dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 dialog.show();
             }
@@ -150,7 +179,7 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
 
         GetDocument(docKey);
 
-        AutoCompleteTextView editText = findViewById(R.id.editTextTextPostalAddress);
+        final AutoCompleteTextView editText = findViewById(R.id.editTextTextPostalAddress);
         adapter = new ArrayAdapter<String>(this,
                 R.layout.support_simple_spinner_dropdown_item, suggestions);
         adapter.setNotifyOnChange(true);
@@ -174,6 +203,20 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
             public void afterTextChanged(final Editable s) {
                 mHandler.removeCallbacks(mFilterTask);
                 mHandler.postDelayed(mFilterTask, 1000);
+            }
+        });
+
+        editText.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View arg1, int pos,
+                                    long id) {
+                AddSingleActivity addSingleActivity = new AddSingleActivity();
+                List parts = addSingleActivity.splitRight(adapter.getItem(pos),", ", 2);
+                editText.setText(parts.get(0).toString());
+                if (parts.get(1)!=null){
+                    editTextTextCountryName.setText(parts.get(1).toString());
+                }
             }
         });
     }
@@ -210,24 +253,13 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
                 break;
             case R.id.buttonOK:
                 AddSingleActivity addSingleActivity = new AddSingleActivity();
-                List<Object> results = addSingleActivity.safeAdd(this, editTextTextPersonName.getText().toString(), editTextTextPostalAddress.getText().toString(), mDisplayDate.getText().toString(), mDisplayDate2.getText().toString());
+                List<Object> results = addSingleActivity.safeAdd(this, editTextTextPersonName.getText().toString(), editTextTextPostalAddress.getText().toString(),editTextTextCountryName.getText().toString(), mDisplayDate.getText().toString(), mDisplayDate2.getText().toString());
                 if (results!=null){
-                    EditDocument(docKey, results.get(0).toString(), results.get(1).toString(), results.get(2), results.get(3));
+                    EditDocument(docKey, results.get(0).toString(), results.get(1).toString(), results.get(2).toString(), results.get(3), results.get(4));
                     finish();
                 };
                 break;
 
-                /*
-                Date date = null;
-                try {
-                    date = formatter.parse(mDisplayDate.getText().toString());
-                    EditDocument(docKey, editTextTextPersonName.getText().toString(), editTextTextPostalAddress.getText().toString(), date);
-                } catch (ParseException e) {
-                    Log.e(TAG, "Catch error: " + date);
-                    e.printStackTrace();
-                }
-                finish();
-                break;*/
             case R.id.buttonDelete:
                 DeleteDocument(docKey);
                 finish();
@@ -252,6 +284,9 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
                         }
                         if (document.contains("location")){
                             editTextTextPostalAddress.setText(document.get("location").toString());
+                        }
+                        if (document.contains("country")){
+                            editTextTextCountryName.setText(document.get("country").toString());
                         }
                         if (document.contains("dateA")){
                             MainActivity mainActivity = new MainActivity();
@@ -291,55 +326,21 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
                 });
     }
 
-    private void EditDocument(String id, String name, String loc, Object arrive, Object depart){
+    private void EditDocument(String id, String name, String loc, String country, Object arrive, Object depart){
         // Access a Cloud Firestore instance from your Activity
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         DocumentReference document = db.collection("users").document(id);
 
-        document.update("name", name)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "DocumentSnapshot successfully updated!");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error updating document", e);
-                    }
-                });
+        updateDocField(document, "name", name);
+        updateDocField(document, "location", loc);
+        updateDocField(document, "country", country);
+        updateDocField(document, "dateA", arrive);
+        updateDocField(document, "dateD", depart);
+    }
 
-        document.update("location", loc)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "DocumentSnapshot successfully updated!");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error updating document", e);
-                    }
-                });
-
-        document.update("dateA", arrive)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "DocumentSnapshot successfully updated!");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error updating document", e);
-                    }
-                });
-
-        document.update("dateD", depart)
+    private void updateDocField(DocumentReference document, String name, Object object){
+        document.update(name, object)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
