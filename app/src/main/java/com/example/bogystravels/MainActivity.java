@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.anychart.chart.common.dataentry.DataEntry;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -28,9 +29,9 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -42,14 +43,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     MyRecyclerViewAdapter adapter;
 
+    FirebaseAuth firebaseAuth;
+    GoogleSignInClient googleSignInClient;
+
     public static void startActivity(Context context, String username) {
         Intent intent = new Intent(context, MainActivity.class);
         intent.putExtra(ARG_NAME, username);
         context.startActivity(intent);
     }
-
-    FirebaseAuth firebaseAuth;
-    GoogleSignInClient googleSignInClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.buttonLogout).setOnClickListener(this);
         findViewById(R.id.buttonRead).setOnClickListener(this);
         findViewById(R.id.buttonAdd).setOnClickListener(this);
+        findViewById(R.id.buttonMap).setOnClickListener(this);
 
         googleSignInClient = GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN);
         firebaseAuth = FirebaseAuth.getInstance();
@@ -70,8 +72,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onResume()
-    {  // After a pause OR at startup
+    public void onResume() {  // After a pause OR at startup
         super.onResume();
         //Refresh your stuff here
         getAllData();
@@ -85,6 +86,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.buttonAdd:
                 launchAddSingleActivity();
+                break;
+            case R.id.buttonMap:
+                launchMapActivity();
                 break;
             case R.id.buttonRead:
                 getAllData();
@@ -125,15 +129,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }*/
 
     private void launchLoginActivity() {
-        //startActivity(LoginActivity.class, "asd"));
         startActivity(new Intent(MainActivity.this, LoginActivity.class));
         finish();
     }
 
     private void launchAddSingleActivity() {
-        //startActivity(new Intent(this, AddSingleActivity.class));
         Intent i = new Intent(this, AddSingleActivity.class);
         i.putExtra("apiKey",APIKEY);
+        startActivity(i);
+    }
+
+    private void launchMapActivity() {
+        Intent i = new Intent(this, MapActivity.class);
+        //i.putExtra("value","Zdravei");
         startActivity(i);
     }
 
@@ -154,12 +162,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if (task.isSuccessful()) {
-                    ArrayList<Map> arrayMap = new ArrayList<>();
+                    ArrayList<Map<String,?>> arrayMap = new ArrayList<>();
                     for (QueryDocumentSnapshot document : task.getResult()) {
-                        Map temp = document.getData();
+                        Map<String,Object> temp = document.getData();
                         temp.put("id", document.getId());
                         arrayMap.add(temp);
                     }
+                    CitiesQuery citiesQuery = new CitiesQuery();
+                    citiesQuery.setCollection(arrayMap);
                     populateRecycler(arrayMap);
                 } else {
                     Log.w(TAG, "Error getting documents.", task.getException());
@@ -168,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
-    public void populateRecycler(ArrayList<Map> arrayMap){
+    public void populateRecycler(ArrayList<Map<String, ?>> arrayMap){
 
         // set up the RecyclerView
         RecyclerView recyclerView = findViewById(R.id.recyclerv_view);

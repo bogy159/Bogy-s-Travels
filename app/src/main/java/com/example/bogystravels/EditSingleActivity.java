@@ -30,6 +30,8 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.json.JSONException;
+
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -211,12 +213,17 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
             @Override
             public void onItemClick(AdapterView<?> parent, View arg1, int pos,
                                     long id) {
-                AddSingleActivity addSingleActivity = new AddSingleActivity();
-                List parts = addSingleActivity.splitRight(adapter.getItem(pos),", ", 2);
-                editText.setText(parts.get(0).toString());
-                if (parts.get(1)!=null){
-                    editTextTextCountryName.setText(parts.get(1).toString());
+
+                try {
+                    CitiesQuery citiesQuery = new CitiesQuery();
+                    citiesQuery.setDefaultById(pos);
+                    editText.setText(citiesQuery.getDefault().get("city").toString());
+                    editTextTextCountryName.setText(citiesQuery.getDefault().get("country").toString());
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
+
             }
         });
     }
@@ -255,7 +262,11 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
                 AddSingleActivity addSingleActivity = new AddSingleActivity();
                 List<Object> results = addSingleActivity.safeAdd(this, editTextTextPersonName.getText().toString(), editTextTextPostalAddress.getText().toString(),editTextTextCountryName.getText().toString(), mDisplayDate.getText().toString(), mDisplayDate2.getText().toString());
                 if (results!=null){
-                    EditDocument(docKey, results.get(0).toString(), results.get(1).toString(), results.get(2).toString(), results.get(3), results.get(4));
+                    try {
+                        EditDocument(docKey, results.get(0).toString(), results.get(1).toString(), results.get(2).toString(), results.get(3), results.get(4));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                     finish();
                 };
                 break;
@@ -326,7 +337,7 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
                 });
     }
 
-    private void EditDocument(String id, String name, String loc, String country, Object arrive, Object depart){
+    private void EditDocument(String id, String name, String loc, String country, Object arrive, Object depart) throws JSONException {
         // Access a Cloud Firestore instance from your Activity
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -337,6 +348,10 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
         updateDocField(document, "country", country);
         updateDocField(document, "dateA", arrive);
         updateDocField(document, "dateD", depart);
+
+        CitiesQuery citiesQuery = new CitiesQuery();
+        updateDocField(document, "countryCode", citiesQuery.getDefaultS().get("countryCode").toString());
+        updateDocField(document, "coordinates", citiesQuery.getDefaultCo());
     }
 
     private void updateDocField(DocumentReference document, String name, Object object){

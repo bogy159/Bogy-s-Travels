@@ -15,51 +15,37 @@ import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.util.Pair;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.DatePicker;
-import android.widget.Filter;
-import android.widget.Filterable;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.jakewharton.rxbinding.widget.RxTextView;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
 
 public class AddSingleActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -91,7 +77,6 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
         if (extras != null) {
             APIKEY = extras.getString("apiKey");
         }
-        System.out.println("Klucha mi e: " + APIKEY);
 
         editTextTextPersonName = findViewById(R.id.editTextTextPersonName);
         editTextTextPostalAddress = findViewById(R.id.editTextTextPostalAddress);
@@ -232,10 +217,14 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
             public void onItemClick(AdapterView<?> parent, View arg1, int pos,
                                     long id) {
 
-                List parts = splitRight(adapter.getItem(pos),", ", 2);
-                editText.setText(parts.get(0).toString());
-                if (parts.get(1)!=null){
-                    editTextTextCountryName.setText(parts.get(1).toString());
+                try {
+                    CitiesQuery citiesQuery = new CitiesQuery();
+                    citiesQuery.setDefaultById(pos);
+                    editText.setText(citiesQuery.getDefault().get("city").toString());
+                    editTextTextCountryName.setText(citiesQuery.getDefault().get("country").toString());
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
             }
         });
@@ -248,7 +237,6 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
             CharSequence s = editTextTextPostalAddress.getText();
             try {
                 suggestions = apiCall(APIKEY, s.toString());
-                System.out.println("Quarry for string: " + s);
 
                 if (!suggestions.isEmpty()){
                     adapter.clear();
@@ -265,8 +253,8 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
         }
     };
 
-    public List<String> apiCall(final String apiKey, final String prefix) throws IOException, InterruptedException {
-        final List<String> citiesList = new ArrayList<String>();
+    public JSONArray apiCallCities(final String apiKey, final String prefix) throws InterruptedException {
+        final JSONArray[] result = new JSONArray[1];
         Thread newThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -285,11 +273,7 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
 
                     try {
                         JSONObject obj = new JSONObject(jsonData);
-                        JSONArray arr = obj.getJSONArray("data");
-
-                        for (int i = 0; i < arr.length(); i++) {
-                            citiesList.add(arr.getJSONObject(i).get("name").toString() + ", " + arr.getJSONObject(i).get("country").toString());
-                        }
+                        result[0] = obj.getJSONArray("data");
 
                     } catch (Throwable t) {
                         Log.e(TAG, "Could not parse malformed JSON: \"" + jsonData + "\"");
@@ -304,6 +288,24 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
 
         newThread.start();
         newThread.join();
+
+        return result[0];
+    }
+
+    public List<String> apiCall(final String apiKey, final String prefix) throws IOException, InterruptedException {
+        List<String> citiesList = new ArrayList<String>();
+
+        try {
+            JSONArray arr = apiCallCities(apiKey, prefix);
+
+            CitiesQuery citiesQuery = new CitiesQuery();
+            citiesQuery.set(arr);
+            citiesList = citiesQuery.getCityCountryL();
+
+        } catch (Throwable t) {
+            Log.e(TAG, "Error: \"" + t + "\"");
+        }
+
         return citiesList;
     }
 
@@ -329,6 +331,9 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
                     try {
                         JSONObject obj = new JSONObject(jsonData);
                         JSONArray arr = obj.getJSONArray("data");
+
+                        CitiesQuery citiesQuery = new CitiesQuery();
+                        citiesQuery.setDefault(arr.getJSONObject(0));
 
                         result[0] = arr.getJSONObject(0).get("country").toString();
 
@@ -376,6 +381,18 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
 
         // Create a new trip with fields
         Map<String, Object> trip = new HashMap<>();
+
+        try {
+            CitiesQuery citiesQuery = new CitiesQuery();
+            trip.put("countryCode", citiesQuery.getDefaultS().get("countryCode").toString());
+            trip.put("coordinates", citiesQuery.getDefaultCo());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            trip.put("countryCode", "");
+            trip.put("coordinates", null);
+        }
+
         trip.put("location", loc);
         trip.put("country", country);
         trip.put("name", name);
@@ -445,27 +462,6 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
             e.printStackTrace();
             return null;
         }
-    }
-
-    public List<String> splitRight(String string, String regex, int limit) {
-        List<String> result = new ArrayList<String>();
-        String[] temp = new String[0];
-        for(int i = 1; i < limit; i++) {
-            if(string.matches(".*"+regex+".*")) {
-                temp = string.split(modifyRegex(regex));
-                result.add(temp[1]);
-                string = temp[0];
-            }
-        }
-        if(temp.length>0) {
-            result.add(temp[0]);
-        }
-        Collections.reverse(result);
-        return result;
-    }
-
-    public String modifyRegex(String regex){
-        return regex + "(?!.*" + regex + ".*$)";
     }
 
 }

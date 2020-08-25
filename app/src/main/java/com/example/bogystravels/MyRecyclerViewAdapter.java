@@ -29,12 +29,12 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
     // data is passed into the constructor
     //MyRecyclerViewAdapter(Context context, List<String> data) {
-    MyRecyclerViewAdapter(Context context, ArrayList<Map> data) {
+    MyRecyclerViewAdapter(Context context, ArrayList<Map<String, ?>> data) {
         this.mInflater = LayoutInflater.from(context);
         this.mData = convertMapToList(data);
     }
 
-    private Pair<ArrayList<String>, ArrayList<Object>> convertMapToList(ArrayList<Map> data){
+    private Pair<ArrayList<String>, ArrayList<Object>> convertMapToList(ArrayList<Map<String, ?>> data){
 
         ArrayList<String> result = new ArrayList<>();
         ArrayList<Object> result2 = new ArrayList<>();
