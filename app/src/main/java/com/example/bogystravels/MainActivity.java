@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 launchAddSingleActivity();
                 break;
             case R.id.buttonMap:
-                launchMapActivity();
+                launchStatsActivity();
                 break;
             case R.id.buttonRead:
                 getAllData();
@@ -139,8 +139,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivity(i);
     }
 
-    private void launchMapActivity() {
-        Intent i = new Intent(this, MapActivity.class);
+    private void launchStatsActivity() {
+        Intent i = new Intent(this, StatsActivity.class);
         //i.putExtra("value","Zdravei");
         startActivity(i);
     }

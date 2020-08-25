@@ -7,4 +7,8 @@
     <string name="something_stupid">Something stupid</string>
     <string name="add">Add</string>
     <string name="select_a_city">Select a City</string>
+    <string name="Africa">Africa</string>
+    <string name="Europe">Europe</string>
+    <string name="theWorld">the World</string>
+    <string name="asia">Asia</string>
 </resources>

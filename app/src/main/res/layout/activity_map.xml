@@ -6,11 +6,82 @@
     android:layout_height="match_parent"
     tools:context=".MapActivity">
 
+    <Button
+        android:id="@+id/buttonAsia"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/asia"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/buttonSouthA"
+        app:layout_constraintTop_toBottomOf="@+id/buttonAfrica" />
+
+    <Button
+        android:id="@+id/buttonSouthA"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="South A"
+        app:layout_constraintEnd_toStartOf="@+id/buttonAsia"
+        app:layout_constraintStart_toEndOf="@+id/buttonNorthA"
+        app:layout_constraintTop_toBottomOf="@+id/buttonEurope" />
+
+    <Button
+        android:id="@+id/buttonAfrica"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="@string/Africa"
+        app:layout_constraintBottom_toTopOf="@+id/buttonAsia"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.846"
+        app:layout_constraintStart_toEndOf="@+id/buttonEurope"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/buttonNorthA"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="North A"
+        app:layout_constraintEnd_toStartOf="@+id/buttonSouthA"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonWorld" />
+
+    <Button
+        android:id="@+id/buttonEurope"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="@string/Europe"
+        app:layout_constraintBottom_toTopOf="@+id/buttonSouthA"
+        app:layout_constraintEnd_toStartOf="@+id/buttonAfrica"
+        app:layout_constraintStart_toEndOf="@+id/buttonWorld"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <com.anychart.AnyChartView
         android:id="@+id/any_chart_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        />
+        android:layout_width="377dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="1dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonSouthA">
+
+    </com.anychart.AnyChartView>
 
 
 
@@ -23,6 +94,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         />
+
+    <Button
+        android:id="@+id/buttonWorld"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="world"
+        app:layout_constraintBottom_toTopOf="@+id/buttonNorthA"
+        app:layout_constraintEnd_toStartOf="@+id/buttonEurope"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
