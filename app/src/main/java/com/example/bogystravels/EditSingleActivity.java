@@ -45,6 +45,7 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
     private static final String TAG = "EditSingleActivity";
     private static String docKey;
     private static String APIKEY;
+    private static String APIID;
 
     @SuppressLint("SimpleDateFormat")
     SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
@@ -71,6 +72,7 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
         if (extras != null) {
             docKey = extras.getString("key");
             APIKEY = extras.getString("apiKey");
+            APIID = extras.getString("apiId");
         }
 
         editTextTextPersonName = findViewById(R.id.editTextTextPersonName);
@@ -234,7 +236,8 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
             CharSequence s = editTextTextPostalAddress.getText();
             AddSingleActivity addSingleActivity = new AddSingleActivity();
             try {
-                suggestions = addSingleActivity.apiCall(APIKEY, s.toString());
+                ApiCalls apiCalls = new ApiCalls();
+                suggestions = apiCalls.apiCall(APIKEY, APIID, s.toString());
                 System.out.println("Quarry for string: " + s);
 
                 if (!suggestions.isEmpty()){

@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final String TAG = "MainActivity";
     private static final String ARG_NAME = "username";
     private static String APIKEY = "";
+    private static String APIID = "";
 
     MyRecyclerViewAdapter adapter;
 
@@ -68,7 +69,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         googleSignInClient = GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN);
         firebaseAuth = FirebaseAuth.getInstance();
-        getApiKey();
+        //getApiKey();
+        getBack4AppKey();
     }
 
     @Override
@@ -136,6 +138,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void launchAddSingleActivity() {
         Intent i = new Intent(this, AddSingleActivity.class);
         i.putExtra("apiKey",APIKEY);
+        i.putExtra("apiId",APIID);
         startActivity(i);
     }
 
@@ -149,6 +152,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent i = new Intent(this, EditSingleActivity.class);
         i.putExtra("key",value);
         i.putExtra("apiKey",APIKEY);
+        i.putExtra("apiId",APIID);
         startActivity(i);
     }
 
@@ -193,7 +197,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         launchEditSingleActivity(adapter.getItem(position));
     }
 
-    public void getApiKey(){
+    public void getGeoDBKey(){
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         db.collection("keys").document("6bzPDauGsDMMQfex3YTu").get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -206,6 +210,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     if (document.exists()) {
                         if (document.contains("apiKeys")){
                             APIKEY = Objects.requireNonNull(document.get("apiKeys")).toString();
+                        }
+                    } else {
+                        Log.d(TAG, "No such document");
+                    }
+                } else {
+                    Log.d(TAG, "Get failed with ", task.getException());
+                }
+            }
+        });
+    }
+
+    public void getBack4AppKey(){
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("keys").document("6bzPDauGsDMMQfex3YTu").get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    assert document != null;
+                    if (document.exists()) {
+                        if (document.contains("apiKeys")){
+                            APIKEY = Objects.requireNonNull(document.get("Back4AppKey")).toString();
+                            APIID = Objects.requireNonNull(document.get("Back4AppAppId")).toString();
                         }
                     } else {
                         Log.d(TAG, "No such document");

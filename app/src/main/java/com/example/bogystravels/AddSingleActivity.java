@@ -28,13 +28,8 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -51,6 +46,7 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
 
     private static final String TAG = "AddSingleActivity";
     private static String APIKEY;
+    private static String APIID;
 
     TextView editTextTextPersonName;
     TextView editTextTextPostalAddress;
@@ -76,6 +72,7 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             APIKEY = extras.getString("apiKey");
+            APIID = extras.getString("apiId");
         }
 
         editTextTextPersonName = findViewById(R.id.editTextTextPersonName);
@@ -236,7 +233,8 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
         public void run() {
             CharSequence s = editTextTextPostalAddress.getText();
             try {
-                suggestions = apiCall(APIKEY, s.toString());
+                ApiCalls apiCalls = new ApiCalls();
+                suggestions = apiCalls.apiCall(APIKEY, APIID, s.toString());
 
                 if (!suggestions.isEmpty()){
                     adapter.clear();
@@ -252,107 +250,6 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
             adapter.getFilter().filter(s);
         }
     };
-
-    public JSONArray apiCallCities(final String apiKey, final String prefix) throws InterruptedException {
-        final JSONArray[] result = new JSONArray[1];
-        Thread newThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    OkHttpClient client = new OkHttpClient();
-
-                    Request request = new Request.Builder()
-                            .url("https://wft-geo-db.p.rapidapi.com/v1/geo/cities?limit=5&namePrefix="+ prefix +"&sort=-population&types=CITY")
-                            .get()
-                            .addHeader("x-rapidapi-host", "wft-geo-db.p.rapidapi.com")
-                            .addHeader("x-rapidapi-key", apiKey)
-                            .build();
-
-                    Response response = client.newCall(request).execute();
-                    String jsonData = response.body().string();
-
-                    try {
-                        JSONObject obj = new JSONObject(jsonData);
-                        result[0] = obj.getJSONArray("data");
-
-                    } catch (Throwable t) {
-                        Log.e(TAG, "Could not parse malformed JSON: \"" + jsonData + "\"");
-                        Log.e(TAG, "Error: \"" + t + "\"");
-                    }
-                }
-                catch (Exception e) {
-                    Log.e(TAG,"An error has occured: " + e);
-                }
-            }
-        });
-
-        newThread.start();
-        newThread.join();
-
-        return result[0];
-    }
-
-    public List<String> apiCall(final String apiKey, final String prefix) throws IOException, InterruptedException {
-        List<String> citiesList = new ArrayList<String>();
-
-        try {
-            JSONArray arr = apiCallCities(apiKey, prefix);
-
-            CitiesQuery citiesQuery = new CitiesQuery();
-            citiesQuery.set(arr);
-            citiesList = citiesQuery.getCityCountryL();
-
-        } catch (Throwable t) {
-            Log.e(TAG, "Error: \"" + t + "\"");
-        }
-
-        return citiesList;
-    }
-
-    public String apiGetCountry(final String apiKey, final String prefix) throws InterruptedException {
-
-        final String[] result = {""};
-        Thread newThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    OkHttpClient client = new OkHttpClient();
-
-                    Request request = new Request.Builder()
-                            .url("https://wft-geo-db.p.rapidapi.com/v1/geo/cities?limit=1&namePrefix="+ prefix +"&sort=-population&types=CITY")
-                            .get()
-                            .addHeader("x-rapidapi-host", "wft-geo-db.p.rapidapi.com")
-                            .addHeader("x-rapidapi-key", apiKey)
-                            .build();
-
-                    Response response = client.newCall(request).execute();
-                    String jsonData = response.body().string();
-
-                    try {
-                        JSONObject obj = new JSONObject(jsonData);
-                        JSONArray arr = obj.getJSONArray("data");
-
-                        CitiesQuery citiesQuery = new CitiesQuery();
-                        citiesQuery.setDefault(arr.getJSONObject(0));
-
-                        result[0] = arr.getJSONObject(0).get("country").toString();
-
-                    } catch (Throwable t) {
-                        Log.e(TAG, "Could not parse malformed JSON: \"" + jsonData + "\"");
-                        Log.e(TAG, "Error: \"" + t + "\"");
-                    }
-                }
-                catch (Exception e) {
-                    Log.e(TAG,"An error has occured: " + e);
-                }
-            }
-        });
-
-        newThread.start();
-        newThread.join();
-
-        return result[0];
-    }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -444,7 +341,9 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
                 return null;
             }
             if (country.equals("")) {
-                country = apiGetCountry(APIKEY, loc);
+                ApiCalls apiCalls = new ApiCalls();
+                //country = apiCalls.goeDBCountry(APIKEY, loc);
+                country = apiCalls.back4AppCountry(APIKEY, APIID, loc);
             }
 
             List<Object> results = new ArrayList<Object>();

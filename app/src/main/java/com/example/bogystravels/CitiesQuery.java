@@ -17,6 +17,38 @@ public class CitiesQuery extends Application {
     public static JSONObject globalJO;
     public static ArrayList<Map<String,?>> collectionAM;
 
+    public void set(JSONArray item) {
+        globalJA = item;
+    }
+
+    public JSONArray convertJSONA(JSONArray arr) throws JSONException {
+        JSONArray jsonArray = new JSONArray();
+        for (int i = 0; i < arr.length(); i++){
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("city", arr.getJSONObject(i).get("name").toString());
+            JSONObject jsonObjectC = (JSONObject) arr.getJSONObject(i).get("country");
+            jsonObject.put("country", jsonObjectC.get("name").toString());
+            jsonObject.put("countryCode", jsonObjectC.get("code").toString());
+            JSONObject jsonObjectL = (JSONObject) arr.getJSONObject(i).get("location");
+            jsonObject.put("latitude", jsonObjectL.get("latitude"));
+            jsonObject.put("longitude", jsonObjectL.get("longitude").toString());
+            jsonArray.put(jsonObject);
+        }
+        return jsonArray;
+    }
+
+    public void setCollection(ArrayList<Map<String,?>> item) {
+        collectionAM = item;
+    }
+
+    public void setDefaultById(int i) throws JSONException {
+        globalJO = globalJA.getJSONObject(i);
+    }
+
+    public void setDefault(JSONObject item) throws JSONException {
+        globalJO = item;
+    }
+
     public JSONArray get() {
         return globalJA;
     }
@@ -59,6 +91,8 @@ public class CitiesQuery extends Application {
             assert globalJA != null;
             for (int i = 0; i < globalJA.length(); i++) {
                 citiesList.add(globalJA.getJSONObject(i).get("city").toString() + ", " + globalJA.getJSONObject(i).get("country").toString());
+                //JSONObject neshto = (JSONObject) globalJA.getJSONObject(i).get("country");
+                //citiesList.add(globalJA.getJSONObject(i).get("name").toString() + ", " + neshto.get("name").toString());
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -69,22 +103,6 @@ public class CitiesQuery extends Application {
     public GeoPoint getDefaultCo() throws JSONException {
         GeoPoint result = new GeoPoint(globalJO.getDouble("latitude"), globalJO.getDouble("longitude"));
         return result;
-    }
-
-    public void set(JSONArray item) {
-        globalJA = item;
-    }
-
-    public void setCollection(ArrayList<Map<String,?>> item) {
-        collectionAM = item;
-    }
-
-    public void setDefaultById(int i) throws JSONException {
-        globalJO = globalJA.getJSONObject(i);
-    }
-
-    public void setDefault(JSONObject item) throws JSONException {
-        globalJO = item;
     }
 
 }
