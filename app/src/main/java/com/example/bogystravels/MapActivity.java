@@ -1,9 +1,12 @@
 package com.example.bogystravels;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.versionedparcelable.ParcelImpl;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -19,16 +22,27 @@ import com.anychart.enums.SidePosition;
 import com.anychart.graphics.vector.text.HAlign;
 import com.anychart.scales.LinearColor;
 
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class MapActivity extends AppCompatActivity implements View.OnClickListener{
 
     List<DataEntry> dataEntries;
+
+    @SuppressLint("SimpleDateFormat")
+    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,11 +54,25 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
         CitiesQuery citiesQuery = new CitiesQuery();
         ArrayList<java.util.Map<String,?>> collectionG = citiesQuery.getCollection();
 
+
+        //List<DataEntry> neshto = countDurations(reduceColWithTime(collectionG,"country", "countryCode"));
+        //for (int i=0; i< neshto.size(); i++){
+        //    System.out.println("Na red e " + i + ": " + neshto.get(i).getValue("id") + " - " + neshto.get(i).getValue("value"));
+        //}
+
+
         if(collectionG.isEmpty()){
             Toast.makeText(MapActivity.this, "No trip records found. Please, add more data!", Toast.LENGTH_LONG).show();
         }
         else{
-            dataEntries = countCountries(reduceColTo2(collectionG,"country", "countryCode"));
+            assert bundle != null;
+            if (bundle.getBoolean("time")){
+                dataEntries = countDurations(reduceColWithTime(collectionG,"country", "countryCode"));
+            }
+            else
+            {
+                dataEntries = countCountries(reduceColTo2(collectionG,"country", "countryCode"));
+            }
             if (dataEntries.isEmpty()){
                 Toast.makeText(MapActivity.this, "Not enough data for this view.", Toast.LENGTH_LONG).show();
             }
@@ -125,6 +153,41 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
         return result;
     }
 
+    public Pair<String[], long[]> reduceColWithTime(final ArrayList<java.util.Map<String,?>> col, String arg1, String arg2){
+
+        ArrayList<java.util.Map<String,Object>> newData = new ArrayList<>();
+        Set<String> countrySet = new HashSet<String>();
+
+        if (col != null){
+            for (int i=0; i<col.size(); i++){
+                java.util.Map<String,Object> item = new HashMap<>();
+                item.put(arg1, col.get(i).get(arg1).toString());
+                item.put(arg2, col.get(i).get(arg2).toString());
+                com.google.firebase.Timestamp a = (com.google.firebase.Timestamp) col.get(i).get("dateA");
+                com.google.firebase.Timestamp d = (com.google.firebase.Timestamp) col.get(i).get("dateD");
+                long elapsed = d.getSeconds()-a.getSeconds();
+                long days = TimeUnit.SECONDS.toDays(elapsed) + 1;
+                countrySet.add(col.get(i).get(arg2).toString());
+                item.put("time", days);
+                newData.add(item);
+            }
+        }
+
+        String countryArr[] = countrySet.toArray(new String[0]);
+
+        long durations[] = new long[countryArr.length];
+
+        for (int i=0; i<newData.size(); i++){
+            for (int j=0; j<countryArr.length; j++){
+                if (newData.get(i).get(arg2).toString().equals(countryArr[j])){
+                    durations[j] = durations[j] + (long) newData.get(i).get("time");
+                }
+            }
+        }
+
+        return new Pair<>(countryArr, durations);
+    }
+
     public List<DataEntry> countCountries(ArrayList<java.util.Map<String,String>> col){
         List<DataEntry> data =  new ArrayList<>();
 
@@ -134,6 +197,19 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
                 if (!data.contains(customDataEntry)){
                     data.add(customDataEntry);
                 }
+            }
+        }
+
+        return data;
+    }
+
+    public List<DataEntry> countDurations(Pair<String[], long[]> col){
+        List<DataEntry> data =  new ArrayList<>();
+
+        if (col != null){
+            for (int i=0; i< col.first.length; i++){
+                CustomDataEntry customDataEntry = new CustomDataEntry(col.first[i], col.second[i], new LabelDataEntry(false));
+                data.add(customDataEntry);
             }
         }
 
@@ -154,6 +230,12 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
                 .padding(10, 0, 10, 0)
                 .text("<span style=\"color:#7c868e; font-size: 18px\"> Most visited countries around " + text + ".</span> <br>" +
                         "<span style=\"color:#545f69; font-size: 14px\">Per number of cities visited</span>");
+
+        Bundle bundle = getIntent().getExtras();
+        if (bundle.getBoolean("time")){
+            map.title().text("<span style=\"color:#7c868e; font-size: 18px\"> Time spent in countries around " + text + ".</span> <br>" +
+                    "<span style=\"color:#545f69; font-size: 14px\">Per days spent in the country</span>");
+        }
 
         map.credits().enabled(false);
         //map.credits()
@@ -215,6 +297,11 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
     }
 
     class CustomDataEntry extends DataEntry {
+        public CustomDataEntry(String id, long value, LabelDataEntry label) {
+            setValue("id", id);
+            setValue("value", value);
+            setValue("label", label);
+        }
         public CustomDataEntry(String id, String name, Number value) {
             setValue("id", id);
             setValue("name", name);
