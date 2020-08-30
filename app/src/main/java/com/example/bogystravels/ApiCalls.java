@@ -1,6 +1,5 @@
 package com.example.bogystravels;
 
-import android.content.ContentProvider;
 import android.util.Log;
 
 import com.squareup.okhttp.OkHttpClient;

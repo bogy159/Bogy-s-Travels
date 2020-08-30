@@ -1,7 +1,6 @@
 package com.example.bogystravels;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.versionedparcelable.ParcelImpl;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -22,13 +21,9 @@ import com.anychart.enums.SidePosition;
 import com.anychart.graphics.vector.text.HAlign;
 import com.anychart.scales.LinearColor;
 
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -38,8 +33,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class MapActivity extends AppCompatActivity implements View.OnClickListener{
-
-    List<DataEntry> dataEntries;
 
     @SuppressLint("SimpleDateFormat")
     SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
@@ -54,18 +47,12 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
         CitiesQuery citiesQuery = new CitiesQuery();
         ArrayList<java.util.Map<String,?>> collectionG = citiesQuery.getCollection();
 
-
-        //List<DataEntry> neshto = countDurations(reduceColWithTime(collectionG,"country", "countryCode"));
-        //for (int i=0; i< neshto.size(); i++){
-        //    System.out.println("Na red e " + i + ": " + neshto.get(i).getValue("id") + " - " + neshto.get(i).getValue("value"));
-        //}
-
-
         if(collectionG.isEmpty()){
             Toast.makeText(MapActivity.this, "No trip records found. Please, add more data!", Toast.LENGTH_LONG).show();
         }
         else{
             assert bundle != null;
+            List<DataEntry> dataEntries;
             if (bundle.getBoolean("time")){
                 dataEntries = countDurations(reduceColWithTime(collectionG,"country", "countryCode"));
             }
@@ -77,12 +64,11 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
                 Toast.makeText(MapActivity.this, "Not enough data for this view.", Toast.LENGTH_LONG).show();
             }
             else{
-                assert bundle != null;
                 if (Objects.equals(bundle.getString("value"), "")){
                     Toast.makeText(MapActivity.this, "Please, choose the map buttons at the top.", Toast.LENGTH_LONG).show();
                 }
                 else{
-                    GenerateMap(dataEntries,bundle.getString("value"), bundle.getString("text"));
+                    GenerateMap(dataEntries,bundle.getString("value"), bundle.getString("text"), bundle.getBoolean("time"));
                 }
             }
         }
@@ -216,7 +202,7 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
         return data;
     }
 
-    private void GenerateMap(List<DataEntry> data, String continent, String text){
+    private void GenerateMap(List<DataEntry> data, String continent, String text, Boolean t){
         AnyChartView anyChartView = findViewById(R.id.any_chart_view);
         anyChartView.setProgressBar(findViewById(R.id.progress_bar));
 
@@ -282,18 +268,24 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
         series.labels().fontColor("#212121");
         series.labels().format("{%Value}");
 
-        series.tooltip()
-                .useHtml(true)
-                .format("function() {\n" +
-                        "            return '<span style=\"font-size: 13px\">' + this.value + ' visited cities</span>';\n" +
-                        "          }");
+        if (t){
+            series.tooltip()
+                    .useHtml(true)
+                    .format("function() {\n" +
+                            "            return '<span style=\"font-size: 13px\">' + this.value + ' days spent in country</span>';\n" +
+                            "          }");
+        }
+        else {
+            series.tooltip()
+                    .useHtml(true)
+                    .format("function() {\n" +
+                            "            return '<span style=\"font-size: 13px\">' + this.value + ' visited cities</span>';\n" +
+                            "          }");
+        }
 
-
-        //anyChartView.addScript("file:///android_asset/united_states_of_america.js");
         anyChartView.addScript("file:///android_asset/" + continent + ".js");
         anyChartView.addScript("file:///android_asset/proj4.js");
         anyChartView.setChart(map);
-
     }
 
     class CustomDataEntry extends DataEntry {
