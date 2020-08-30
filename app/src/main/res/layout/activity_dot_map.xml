@@ -14,7 +14,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:text="@string/asia"
+        android:text="Asia"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/buttonSouthA"
         app:layout_constraintTop_toBottomOf="@+id/buttonAfrica" />
@@ -101,7 +101,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:text="world"
+        android:text="World"
         app:layout_constraintBottom_toTopOf="@+id/buttonNorthA"
         app:layout_constraintEnd_toStartOf="@+id/buttonEurope"
         app:layout_constraintStart_toStartOf="parent"

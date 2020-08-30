@@ -12,13 +12,15 @@ import android.widget.Toast;
 import com.anychart.AnyChart;
 import com.anychart.AnyChartView;
 import com.anychart.chart.common.dataentry.DataEntry;
+import com.anychart.core.map.series.Connector;
 import com.anychart.core.map.series.Marker;
+import com.anychart.enums.Anchor;
+import com.anychart.enums.MarkerType;
 import com.anychart.enums.SelectionMode;
 import com.anychart.graphics.vector.SolidFill;
 import com.google.firebase.firestore.GeoPoint;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -44,7 +46,8 @@ public class DotMapActivity extends AppCompatActivity  implements View.OnClickLi
         }
         else {
             assert bundle != null;
-            List<DataEntry> dataEntries = countCities(reduceColCityCo(collectionG));
+            ArrayList<java.util.Map<String, Object>> dataRaw = reduceColCityCo(collectionG);
+            List<DataEntry> dataEntries = countCities(dataRaw);
             if (dataEntries.isEmpty()){
                 Toast.makeText(DotMapActivity.this, "Not enough data for this view.", Toast.LENGTH_LONG).show();
             }
@@ -53,11 +56,16 @@ public class DotMapActivity extends AppCompatActivity  implements View.OnClickLi
                     Toast.makeText(DotMapActivity.this, "Please, choose the map buttons at the top.", Toast.LENGTH_LONG).show();
                 }
                 else{
-                    GenerateMap(dataEntries,bundle.getString("value"), bundle.getString("text"));
+                    if (bundle.getBoolean("con")){
+                        List<DataEntry> routeEntries = getRouteData(dataRaw);
+                        GenerateConnMap(dataEntries, routeEntries, bundle.getString("value"), bundle.getString("text"));
+                    }
+                    else {
+                        GenerateDotMap(dataEntries,bundle.getString("value"), bundle.getString("text"));
+                    }
                 }
             }
         }
-
 
         findViewById(R.id.buttonWorld).setOnClickListener(this);
         findViewById(R.id.buttonEurope).setOnClickListener(this);
@@ -76,12 +84,12 @@ public class DotMapActivity extends AppCompatActivity  implements View.OnClickLi
                 break;
             case R.id.buttonEurope:
             case R.id.buttonAfrica:
-                Toast.makeText(DotMapActivity.this, button.getText().toString().toLowerCase(), Toast.LENGTH_LONG).show();
+                Toast.makeText(DotMapActivity.this, button.getText().toString(), Toast.LENGTH_LONG).show();
                 reloadActivity(button.getText().toString().toLowerCase(),button.getText().toString());
                 break;
             case R.id.buttonAsia:
-                Toast.makeText(DotMapActivity.this, button.getText().toString().toLowerCase(), Toast.LENGTH_LONG).show();
-                reloadActivity("bogy","Asia and Oceania");
+                Toast.makeText(DotMapActivity.this, button.getText().toString(), Toast.LENGTH_LONG).show();
+                reloadActivity("bogy","Asia");
                 break;
             case R.id.buttonSouthA:
                 Toast.makeText(DotMapActivity.this, button.getText().toString(), Toast.LENGTH_LONG).show();
@@ -101,7 +109,7 @@ public class DotMapActivity extends AppCompatActivity  implements View.OnClickLi
         startActivity(intent2);
     }
 
-    private void GenerateMap(List<DataEntry> data, String continent, String text){
+    private void GenerateDotMap(List<DataEntry> data, String continent, String text){
         Log.e(TAG,"I shouldn't be here");
 
         AnyChartView anyChartView = findViewById(R.id.any_chart_view);
@@ -157,11 +165,87 @@ public class DotMapActivity extends AppCompatActivity  implements View.OnClickLi
         anyChartView.setChart(map);
     }
 
+    private void GenerateConnMap(List<DataEntry> data, List<DataEntry> routes,  String continent, String text){
+
+        AnyChartView anyChartView = findViewById(R.id.any_chart_view);
+        anyChartView.setProgressBar(findViewById(R.id.progress_bar));
+
+        com.anychart.charts.Map map = AnyChart.connector();
+
+        map.unboundRegions()
+                .enabled(true)
+                .fill(new SolidFill("#E1E1E1", 1))
+                .stroke("1 #D2D2D2");
+
+        map.geoData("anychart.maps." + continent);
+        map.interactivity().selectionMode(SelectionMode.NONE);
+
+        map.title().enabled(true);
+        map.title().useHtml(true);
+        map.title().text("Journey Route: " + text + " Roundtrip<br/>");
+
+        Connector connectorSeries = map.connector(routes);
+        //connectorSeries.startSize(0)
+        //        .endSize(0)
+        //        .stroke("2 #64b5f6")
+        //        .name("Rent a Car");
+        connectorSeries.curvature(0);
+        //connectorSeries.legendItem("{" +
+        //        "        iconType: 'circle'," +
+        //        "        fill: '#64b5f6'," +
+        //        "        iconStroke: '2 #E1E1E1'" +
+        //        "      }");
+        //connectorSeries.hovered().stroke("1.5 #212121");
+
+        connectorSeries.tooltip()
+                .padding(8, 13, 10, 13)
+                .fontSize(12)
+                .fontColor("#fff")
+                .format("To {%to} from {%from}.")
+                .titleFormat("{%number}. <span style=\"font-size: 13px; color: #E1E1E1\">{%from}</span>")
+                .useHtml(true);
+
+        map.legend(false);
+
+        Marker citiesSeries = map.marker(data);
+        citiesSeries.type(MarkerType.CIRCLE)
+                .size(4)
+                .fill(new SolidFill("#64b5f6", 1))
+                .stroke("2 #E1E1E1")
+                .tooltip(false);
+//
+        citiesSeries.hovered()
+                .size(4)
+                .fill(new SolidFill("#64b5f6", 1))
+                .stroke("2 #E1E1E1");
+
+        citiesSeries.labels().enabled(true);
+        citiesSeries.labels().position("center-bottom");
+        citiesSeries.labels().fontColor("#263238");
+        citiesSeries.labels()
+                .offsetX(5)
+                .offsetY(0)
+                .anchor(Anchor.LEFT_CENTER)
+                .format("{%city}");
+
+        citiesSeries.legendItem().enabled(false);
+
+        anyChartView.addScript("file:///android_asset/" + continent + ".js");
+        anyChartView.addScript("file:///android_asset/proj4.js");
+        anyChartView.setChart(map);
+    }
+
     class CustomDataEntry extends DataEntry {
         public CustomDataEntry(String city, Double latitude, Double longitude) {
             setValue("city", city);
             setValue("lat", latitude);
             setValue("long", longitude);
+        }
+
+        public CustomDataEntry(Number[] points, String from, String to ) {
+            setValue("points", points);
+            setValue("from", from);
+            setValue("to", to);
         }
     }
 
@@ -197,4 +281,24 @@ public class DotMapActivity extends AppCompatActivity  implements View.OnClickLi
 
         return data;
     }
+
+    private List<DataEntry> getRouteData(ArrayList<java.util.Map<String, Object>> col){
+        List<DataEntry> data = new ArrayList<>();
+
+        if (col != null){
+            for (int i=col.size()-2; i>=0; i--){
+                GeoPoint coo1 = (GeoPoint) col.get(i+1).get("coordinates");
+                GeoPoint coo2 = (GeoPoint) col.get(i).get("coordinates");
+                assert coo1 != null;
+                assert coo2 != null;
+                //DotMapActivity.CustomDataEntry customDataEntry = new CustomDataEntry(col.get(i).get("location").toString(), coo.getLatitude(), coo.getLongitude());
+                //DotMapActivity.CustomDataEntry customDataEntry = new CustomDataEntry(coo1.getLatitude(), coo1.getLongitude(), coo2.getLatitude(), coo2.getLongitude());
+                DotMapActivity.CustomDataEntry customDataEntry = new CustomDataEntry(new Number[]{ coo1.getLatitude(), coo1.getLongitude(), coo2.getLatitude(), coo2.getLongitude()}, col.get(i+1).get("location").toString(), col.get(i).get("location").toString());
+                data.add(customDataEntry);
+            }
+        }
+
+        return data;
+    }
+
 }

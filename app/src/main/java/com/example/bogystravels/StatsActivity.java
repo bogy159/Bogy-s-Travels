@@ -17,6 +17,7 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
         findViewById(R.id.button1).setOnClickListener(this);
         findViewById(R.id.button2).setOnClickListener(this);
         findViewById(R.id.button3).setOnClickListener(this);
+        findViewById(R.id.button4).setOnClickListener(this);
     }
 
     public void onClick(View view) {
@@ -28,7 +29,10 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
                 launchMapActivity(true);
                 break;
             case R.id.button3:
-                launchDotMapActivity();
+                launchDotMapActivity(false);
+                break;
+            case R.id.button4:
+                launchDotMapActivity(true);
                 break;
             case R.id.buttonBack:
                 finish();
@@ -44,11 +48,11 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
         startActivity(i);
     }
 
-
-    private void launchDotMapActivity() {
+    private void launchDotMapActivity(Boolean con) {
         Intent i = new Intent(this, DotMapActivity.class);
         i.putExtra("value","world");
         i.putExtra("text","the World");
+        i.putExtra("con",con);
         startActivity(i);
     }
 }

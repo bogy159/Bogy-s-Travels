@@ -34,9 +34,6 @@ import java.util.concurrent.TimeUnit;
 
 public class MapActivity extends AppCompatActivity implements View.OnClickListener{
 
-    @SuppressLint("SimpleDateFormat")
-    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,12 +87,12 @@ public class MapActivity extends AppCompatActivity implements View.OnClickListen
                 break;
             case R.id.buttonEurope:
             case R.id.buttonAfrica:
-                Toast.makeText(MapActivity.this, button.getText().toString().toLowerCase(), Toast.LENGTH_LONG).show();
+                Toast.makeText(MapActivity.this, button.getText().toString(), Toast.LENGTH_LONG).show();
                 reloadActivity(button.getText().toString().toLowerCase(),button.getText().toString());
                 break;
             case R.id.buttonAsia:
-                Toast.makeText(MapActivity.this, button.getText().toString().toLowerCase(), Toast.LENGTH_LONG).show();
-                reloadActivity("bogy","Asia and Oceania");
+                Toast.makeText(MapActivity.this, button.getText().toString(), Toast.LENGTH_LONG).show();
+                reloadActivity("bogy","Asia");
                 break;
             case R.id.buttonSouthA:
                 Toast.makeText(MapActivity.this, button.getText().toString(), Toast.LENGTH_LONG).show();
