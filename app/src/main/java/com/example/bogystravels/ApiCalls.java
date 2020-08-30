@@ -137,11 +137,11 @@ public class ApiCalls {
                             "        \"$regex\": \"(?i)^mona\"" +
                             "    }" +
                             "}", "utf-8");
-                    System.out.println(where);
+                    //System.out.println(where);
 
                     where = "%7B++++%22name%22%3A+%7B++++++++%22%24regex%22%3A+%22%28%3Fi%29%5E" + prefix + "%22++++%7D%7D";
 
-                    URL url = new URL("https://parseapi.back4app.com/classes/Continentscountriescities_City?limit=5&order=-population&include=country&keys=name,country,country.name,country.code,location&where=" + where);
+                    URL url = new URL("https://parseapi.back4app.com/classes/Continentscountriescities_City?limit=5&order=-population&include=country,country.continent&keys=name,country,country.name,country.code,country.continent.name,location&where=" + where);
                     HttpURLConnection urlConnection = (HttpURLConnection)url.openConnection();
                     urlConnection.setRequestProperty("X-Parse-Application-Id", apiID); // This is your app's application id
                     urlConnection.setRequestProperty("X-Parse-REST-API-Key", apiKey); // This is your app's REST API key
@@ -180,7 +180,7 @@ public class ApiCalls {
                     OkHttpClient client = new OkHttpClient();
 
                     Request request = new Request.Builder()
-                            .url("https://parseapi.back4app.com/classes/Continentscountriescities_City?limit=1&order=-population&include=country&keys=name,country,country.name,country.code,location&where=%7B++++%22name%22%3A+%7B++++++++%22%24regex%22%3A+%22%28%3Fi%29%5E" + prefix + "%22++++%7D%7D")
+                            .url("https://parseapi.back4app.com/classes/Continentscountriescities_City?limit=1&order=-population&include=country,country.continent&keys=name,country,country.name,country.code,country.continent.name,location&where=%7B++++%22name%22%3A+%7B++++++++%22%24regex%22%3A+%22%28%3Fi%29%5E" + prefix + "%22++++%7D%7D")
                             .get()
                             .addHeader("X-Parse-Application-Id", apiID)
                             .addHeader("X-Parse-REST-API-Key", apiKey)

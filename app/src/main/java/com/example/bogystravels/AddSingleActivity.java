@@ -282,6 +282,7 @@ public class AddSingleActivity extends AppCompatActivity implements View.OnClick
         try {
             CitiesQuery citiesQuery = new CitiesQuery();
             trip.put("countryCode", citiesQuery.getDefaultS().get("countryCode").toString());
+            trip.put("continent", citiesQuery.getDefault().get("continent").toString());
             trip.put("coordinates", citiesQuery.getDefaultCo());
 
         } catch (Exception e) {

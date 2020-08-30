@@ -18,6 +18,7 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
         findViewById(R.id.button2).setOnClickListener(this);
         findViewById(R.id.button3).setOnClickListener(this);
         findViewById(R.id.button4).setOnClickListener(this);
+        findViewById(R.id.button5).setOnClickListener(this);
     }
 
     public void onClick(View view) {
@@ -33,6 +34,9 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
                 break;
             case R.id.button4:
                 launchDotMapActivity(true);
+                break;
+            case R.id.button5:
+                launchChartActivity();
                 break;
             case R.id.buttonBack:
                 finish();
@@ -53,6 +57,14 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
         i.putExtra("value","world");
         i.putExtra("text","the World");
         i.putExtra("con",con);
+        startActivity(i);
+    }
+
+    private void launchChartActivity() {
+        Intent i = new Intent(this, ChartActivity.class);
+        //i.putExtra("value","world");
+        //i.putExtra("text","the World");
+        //i.putExtra("con",con);
         startActivity(i);
     }
 }

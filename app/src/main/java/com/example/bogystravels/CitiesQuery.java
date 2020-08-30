@@ -29,6 +29,8 @@ public class CitiesQuery extends Application {
             JSONObject jsonObjectC = (JSONObject) arr.getJSONObject(i).get("country");
             jsonObject.put("country", jsonObjectC.get("name").toString());
             jsonObject.put("countryCode", jsonObjectC.get("code").toString());
+            JSONObject jsonObjectR = (JSONObject) jsonObjectC.get("continent");
+            jsonObject.put("continent", jsonObjectR.get("name").toString());
             JSONObject jsonObjectL = (JSONObject) arr.getJSONObject(i).get("location");
             jsonObject.put("latitude", jsonObjectL.get("latitude"));
             jsonObject.put("longitude", jsonObjectL.get("longitude").toString());

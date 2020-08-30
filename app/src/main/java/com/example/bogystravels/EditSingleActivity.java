@@ -354,6 +354,7 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
 
         CitiesQuery citiesQuery = new CitiesQuery();
         updateDocField(document, "countryCode", citiesQuery.getDefaultS().get("countryCode").toString());
+        updateDocField(document, "continent", citiesQuery.getDefault().get("continent").toString());
         updateDocField(document, "coordinates", citiesQuery.getDefaultCo());
     }
 
