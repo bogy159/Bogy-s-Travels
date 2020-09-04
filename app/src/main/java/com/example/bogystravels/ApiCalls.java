@@ -27,10 +27,12 @@ public class ApiCalls {
 
         try {
             //JSONArray arr = geoDBCities(apiKey, prefix);
-            JSONArray arr = Back4AppCities(apiKey, apiID, prefix);
+            //JSONArray arr = Back4AppCities(apiKey, apiID, prefix);!!!
+            JSONArray arr = Back4AppCities2(apiKey, apiID, prefix);
 
             CitiesQuery citiesQuery = new CitiesQuery();
             arr = citiesQuery.convertJSONA(arr);
+
             citiesQuery.set(arr);
             citiesList = citiesQuery.getCityCountryL();
 
@@ -79,6 +81,8 @@ public class ApiCalls {
 
         return result[0];
     }
+
+
 
     public String goeDBCountry(final String apiKey, final String prefix) throws InterruptedException {
 
@@ -161,6 +165,47 @@ public class ApiCalls {
                     System.out.println("Error: " + e.toString());
                 }
 
+            }
+        });
+
+        newThread.start();
+        newThread.join();
+
+        return result[0];
+    }
+
+    public JSONArray Back4AppCities2(final String apiKey, final String apiID, final String prefix) throws InterruptedException {
+        final JSONArray[] result = new JSONArray[1];
+        Thread newThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    OkHttpClient client = new OkHttpClient();
+
+                    String where = "%7B++++%22name%22%3A+%7B++++++++%22%24regex%22%3A+%22%28%3Fi%29%5E" + prefix + "%22++++%7D%7D";
+
+                    Request request = new Request.Builder()
+                            .url("https://parseapi.back4app.com/classes/Continentscountriescities_City?limit=5&order=-population&include=country,country.continent&keys=name,country,country.name,country.code,country.continent.name,location&where=" + where)
+                            .get()
+                            .addHeader("X-Parse-Application-Id", apiID)
+                            .addHeader("X-Parse-REST-API-Key", apiKey)
+                            .build();
+
+                    Response response = client.newCall(request).execute();
+                    String jsonData = response.body().string();
+
+                    try {
+                        JSONObject obj = new JSONObject(jsonData);
+                        result[0] = obj.getJSONArray("results");
+
+                    } catch (Throwable t) {
+                        Log.e(TAG, "Could not parse malformed JSON: \"" + jsonData + "\"");
+                        Log.e(TAG, "Error: \"" + t + "\"");
+                    }
+                }
+                catch (Exception e) {
+                    Log.e(TAG,"An error has occured: " + e);
+                }
             }
         });
 

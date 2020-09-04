@@ -234,11 +234,10 @@ public class EditSingleActivity extends AppCompatActivity implements View.OnClic
         @Override
         public void run() {
             CharSequence s = editTextTextPostalAddress.getText();
-            AddSingleActivity addSingleActivity = new AddSingleActivity();
             try {
+                System.out.println("Quarry for string: " + s);
                 ApiCalls apiCalls = new ApiCalls();
                 suggestions = apiCalls.apiCall(APIKEY, APIID, s.toString());
-                System.out.println("Quarry for string: " + s);
 
                 if (!suggestions.isEmpty()){
                     adapter.clear();

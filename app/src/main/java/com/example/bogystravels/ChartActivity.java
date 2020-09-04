@@ -106,10 +106,10 @@ public class ChartActivity extends AppCompatActivity {
                         "    }");
 
         // set the maximum depth of levels shown
-        treeMap.maxDepth(2);
+        treeMap.maxDepth(4);
 
         // set the depth of hints
-        treeMap.hintDepth(1);
+        treeMap.hintDepth(2);
 
         // set the opacity of hints
         treeMap.hintOpacity(0.7);

@@ -10,15 +10,23 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModel;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.anychart.chart.common.dataentry.DataEntry;
+import com.algolia.search.client.ClientAccount;
+import com.algolia.search.client.ClientSearch;
+import com.algolia.search.saas.AlgoliaException;
+import com.algolia.search.saas.Client;
+import com.algolia.search.saas.CompletionHandler;
+import com.algolia.search.saas.Index;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.Api;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
@@ -29,13 +37,15 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, MyRecyclerViewAdapter.ItemClickListener{
+public class MainActivity extends AppCompatActivity implements  View.OnClickListener, MyRecyclerViewAdapter.ItemClickListener{
 
     private static final String TAG = "MainActivity";
     private static final String ARG_NAME = "username";
@@ -69,8 +79,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         googleSignInClient = GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN);
         firebaseAuth = FirebaseAuth.getInstance();
-        //getApiKey();
+        //getGeoDBKey();
         getBack4AppKey();
+
+       // Client client = new Client("RV4EGAJVG0", "d861029a7b99a9a8ab1aaa9db2567461");
+       // Index index = client.getIndex("dev_CITIES");
+
+       // CompletionHandler completionHandler = new CompletionHandler() {
+       //     @Override
+       //     public void requestCompleted(@Nullable JSONObject jsonObject, @Nullable AlgoliaException e) {
+       //         System.out.println("Kakvotot tatanewf" + jsonObject);
+       //         System.out.println("Error" + e);
+       //     }
+       // };
+
+      //  index.searchAsync(new com.algolia.search.saas.Query("London"), completionHandler);
+
+        //System.out.println("Kakvotot tatanewf");
+
     }
 
     @Override
